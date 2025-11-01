@@ -1,0 +1,228 @@
+body {
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  color: white;
+}
+
+.wego-header {
+  position: sticky;
+  top: 0;
+  background: transparent;
+  z-index: 1000;
+  padding: 12px 24px;
+}
+
+.wego-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.wego-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wego-logo {
+  background: #36c275;
+  color: white;
+  border-radius: 10px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+}
+
+.wego-title {
+  color: white;
+  font-size: 1.2rem;
+  text-decoration: none;
+}
+
+.wego-title span {
+  color: #36c275;
+}
+
+/* ==== Menu desktop ==== */
+.wego-menu {
+  display: flex;
+  flex-direction: row;  /* horizontal menu */
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap; /* wrap si trop petit */
+}
+
+.wego-link {
+  display: inline-block;  /* chaque lien séparé */
+  color: white;
+  background: rgba(173, 216, 230, 0.15); /* couleur eau */
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 24px;
+  padding: 7px 16px;
+  text-decoration: none;
+  font-weight: 300;
+  transition: all 0.3s ease;
+  white-space: nowrap; /* éviter que le texte saute sur 2 lignes */
+}
+
+.wego-link:hover {
+  background: rgba(54,194,117,0.2);
+  color: #36c275;
+  border-color: #36c275;
+}
+
+/* ==== Bouton Réserver ==== */
+.wego-btn {
+  background: #36c275;
+  color: white;
+  border: 1px solid #36c275;
+  border-radius: 10px;
+  padding: 10px 18px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.wego-btn:hover {
+  background: #36c275;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(54, 194, 117, 0.3);
+}
+
+/* ==== Hamburger ==== */
+.wego-hamburger {
+  display: none;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+/* ==== Menu mobile ==== */
+.wego-mobile {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 2000;
+}
+
+.wego-mobile-sheet {
+  background: rgba(173, 216, 230, 0.1); /* fond eau */
+  backdrop-filter: blur(10px);
+  border-left: 1px solid #36c275;
+  width: 70%;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 24px 0 0 24px;
+  gap: 16px; /* espace entre les liens */
+}
+
+.wego-mobile-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.wego-mobile-nav a {
+  color: white;
+  text-decoration: none;
+  padding: 12px;
+  font-weight: 500;
+  border-radius: none;
+  border-bottom: 1px solid #36c275;
+  background: none;
+  display: block;
+  transition: all 0.3s ease;
+  margin-bottom: 5PX;
+}
+
+.wego-mobile-nav a:hover {
+  color: white;
+  background-color: #36c275;
+}
+
+.wego-close {
+  background: transparent;
+  color: white;
+  border: none;
+  font-size: 1.4rem;
+  cursor: pointer;
+}
+
+/* ==== Responsive ==== */
+@media (max-width: 1024px) {
+  .wego-menu {
+    display: none;
+  }
+  .wego-hamburger {
+    display: block;
+  }
+}
+
+@media (max-width: 480px) {
+  .wego-brand {
+    gap: 8px;
+  }
+
+  .wego-title {
+    font-size: 1rem;
+  }
+
+  .wego-btn {
+    padding: 8px 12px;
+  }
+}
+
+/* ==== Mini header quand on scroll ==== */
+.wego-mini-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: #36c275;
+  HEIGHT: 56PX;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 20px;
+  z-index: 3000;
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  animation: slideDown 0.3s ease forwards;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-100%); }
+  to { transform: translateY(0); }
+}
+
+.wego-mini-logo {
+  color: white;
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+.wego-mini-btn {
+  background-color: white;
+  color: #36c275;
+  padding: 8px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.wego-mini-btn:hover {
+  background-color: #2fae5e;
+  color: white;
+  transform: translateY(-2px);
+}

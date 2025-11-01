@@ -10,20 +10,41 @@ const Partner = () => {
     number: '',
     email: '',
     password: '',
-    logoEntreprise: '',
+    logoEntreprise: '', // this will store URL or base64
     country: '',
     city: ''
   });
   const [message, setMessage] = useState('');
+  const [logoPreview, setLogoPreview] = useState(null); // preview image
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
+  // Handle file selection for logo
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setForm({ ...form, logoEntreprise: file }); // store the File object
+      const reader = new FileReader();
+      reader.onloadend = () => setLogoPreview(reader.result); // preview
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://locationvoiture-cbdj.vercel.app/users/demande', form);
+      const data = new FormData();
+      Object.keys(form).forEach(key => {
+        data.append(key, form[key]);
+      });
+
+      const res = await axios.post(
+        'https://locationvoiture-cbdj.vercel.app/users/demande',
+        data,
+        { headers: { 'Content-Type': 'multipart/form-data' } }
+      );
       setMessage(res.data.message);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error submitting demande');
@@ -44,12 +65,8 @@ const Partner = () => {
     return (
       <div style={{ textAlign: 'center', marginTop: '50px' }}>
         <h2>Are you a Supplier / Partner?</h2>
-        <button onClick={() => setView('register')} style={{ margin: '10px', padding: '10px 20px' }}>
-          Register
-        </button>
-        <button onClick={() => setView('login')} style={{ margin: '10px', padding: '10px 20px' }}>
-          Login
-        </button>
+        <button onClick={() => setView('register')} style={{ margin: '10px', padding: '10px 20px' }}>Register</button>
+        <button onClick={() => setView('login')} style={{ margin: '10px', padding: '10px 20px' }}>Login</button>
       </div>
     );
   }
@@ -65,7 +82,11 @@ const Partner = () => {
             <input name="number" placeholder="Phone Number" value={form.number} onChange={handleChange} required />
             <input name="email" type="email" placeholder="Email" value={form.email} onChange={handleChange} required />
             <input name="password" type="password" placeholder="Password" value={form.password} onChange={handleChange} required />
-            <input name="logoEntreprise" placeholder="Logo URL" value={form.logoEntreprise} onChange={handleChange} />
+            
+            {/* File input for logo */}
+            <input type="file" accept="image/*" onChange={handleFileChange} />
+            {logoPreview && <img src={logoPreview} alt="Logo Preview" style={{ marginTop: '10px', maxWidth: '100px' }} />}
+            
             <input name="country" placeholder="Country" value={form.country} onChange={handleChange} />
             <input name="city" placeholder="City" value={form.city} onChange={handleChange} />
             <button type="submit" style={{ marginTop: '10px' }}>Submit Demande</button>

@@ -23,7 +23,7 @@ const Partner = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:3001/users/demande', form);
+      const res = await axios.post('https://locationvoiture-cbdj.vercel.app/users/demande', form);
       setMessage(res.data.message);
     } catch (err) {
       setMessage(err.response?.data?.message || 'Error submitting demande');
@@ -33,7 +33,7 @@ const Partner = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('http://localhost:3001/users/login', { email: form.email, password: form.password });
+      const res = await axios.post('https://locationvoiture-cbdj.vercel.app/users/login', { email: form.email, password: form.password });
       setMessage(`Welcome ${res.data.user.name}!`);
     } catch (err) {
       setMessage(err.response?.data?.error || 'Login failed');

@@ -41,7 +41,7 @@ const Partner = () => {
       });
 
       const res = await axios.post(
-        'https://locationvoiture-cbdj.vercel.app/users/demande',
+        'https://locationvoiture-alpha.vercel.app/users/demande',
         data,
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
@@ -54,7 +54,7 @@ const Partner = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      const res = await axios.post('https://locationvoiture-cbdj.vercel.app/users/login', { email: form.email, password: form.password });
+      const res = await axios.post('https://locationvoiture-alpha.vercel.app/users/login', { email: form.email, password: form.password });
       setMessage(`Welcome ${res.data.user.name}!`);
     } catch (err) {
       setMessage(err.response?.data?.error || 'Login failed');

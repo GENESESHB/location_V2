@@ -21,7 +21,7 @@
 }
 
 *{box-sizing:border-box}
-html,body,#root{height:100%}
+html,body,#root{height:auto}
 body{
   margin:0;background:#0e0f13;color:var(--text);
   font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;

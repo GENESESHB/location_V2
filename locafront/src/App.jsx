@@ -6,7 +6,7 @@ import CarList from './components/CarList';
 import UserLocation from './components/UserLocation';
 import Bots from './components/bots';
 import Partner from './components/partner';
-import Dashboard from './components/Dashboard';
+import Dashboard from './components/Dashboard/Dashboard';
 import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import PrivateRoute from './routes/privatRoutes';

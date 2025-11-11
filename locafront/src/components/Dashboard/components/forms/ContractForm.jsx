@@ -26,11 +26,11 @@ const ContractForm = ({
 
     const start = new Date(contractForm.startDateTime);
     const end = new Date(contractForm.endDateTime);
-    
+
     // Calculate difference in days
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     // If same day, minimum 1 day
     const rentalDays = diffDays === 0 ? 1 : diffDays;
 
@@ -67,13 +67,13 @@ const ContractForm = ({
       clientCIN: '',
       clientLicenseNumber: '',
       clientLicenseIssueDate: '',
-      
+
       // Second driver information
       secondDriverLastName: '',
       secondDriverFirstName: '',
       secondDriverLicenseNumber: '',
       secondDriverLicenseIssueDate: '',
-      
+
       // Rental information
       vehicleId: '',
       startDateTime: '',
@@ -94,7 +94,7 @@ const ContractForm = ({
   const handleVehicleChange = (e) => {
     const vehicleId = e.target.value;
     const vehicle = vehicles.find(v => v._id === vehicleId);
-    
+
     // Update the form with vehicle data
     setContractForm(prev => ({
       ...prev,
@@ -106,12 +106,12 @@ const ContractForm = ({
   // Calculate rental days for display
   const calculateRentalDays = () => {
     if (!contractForm.startDateTime || !contractForm.endDateTime) return 0;
-    
+
     const start = new Date(contractForm.startDateTime);
     const end = new Date(contractForm.endDateTime);
     const diffTime = Math.abs(end - start);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
+
     return diffDays === 0 ? 1 : diffDays;
   };
 
@@ -327,7 +327,7 @@ const ContractForm = ({
               .filter(vehicle => vehicle.available)
               .map(vehicle => (
                 <option key={vehicle._id} value={vehicle._id}>
-                  {vehicle.name} - {vehicle.type} - {vehicle.pricePerDay}€/jour
+                  {vehicle.name} - {vehicle.type} - {vehicle.boiteVitesse} - {vehicle.carburant} - {vehicle.pricePerDay}€/jour
                 </option>
               ))
             }
@@ -335,7 +335,7 @@ const ContractForm = ({
           {errors.vehicleId && <span style={{ color: 'red', fontSize: '12px' }}>{errors.vehicleId}</span>}
         </div>
 
-        {/* Selected Vehicle Info */}
+        {/* Selected Vehicle Info - ENHANCED VERSION */}
         {contractForm.vehicleId && (
           <div style={{
             gridColumn: '1 / -1',
@@ -344,14 +344,102 @@ const ContractForm = ({
             borderRadius: '8px',
             border: '2px solid #36c275'
           }}>
-            <h5 style={{ margin: '0 0 8px 0', color: '#2e7d32' }}>Informations du Véhicule Sélectionné:</h5>
+            <h5 style={{ margin: '0 0 8px 0', color: '#2e7d32' }}>📋 Informations Complètes du Véhicule Sélectionné:</h5>
             {getSelectedVehicle() && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', fontSize: '14px' }}>
-                <div><strong>Nom:</strong> {getSelectedVehicle().name}</div>
-                <div><strong>Type:</strong> {getSelectedVehicle().type}</div>
-                <div><strong>Boîte:</strong> {getSelectedVehicle().boiteVitesse}</div>
-                <div><strong>Prix/jour:</strong> {getSelectedVehicle().pricePerDay}€</div>
-                <div><strong>Disponible:</strong> {getSelectedVehicle().available ? 'Oui' : 'Non'}</div>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+                gap: '12px', 
+                fontSize: '14px',
+                marginTop: '10px'
+              }}>
+                {/* Basic Information */}
+                <div><strong>🏷️ Nom:</strong> {getSelectedVehicle().name}</div>
+                <div><strong>🚗 Type:</strong> {getSelectedVehicle().type}</div>
+                <div><strong>⚙️ Boîte:</strong> {getSelectedVehicle().boiteVitesse}</div>
+                <div><strong>💰 Prix/jour:</strong> {getSelectedVehicle().pricePerDay}€</div>
+                
+                {/* Technical Specifications */}
+                <div><strong>⛽ Carburant:</strong> {getSelectedVehicle().carburant}</div>
+                <div><strong>📊 Niveau Réservoir:</strong> {getSelectedVehicle().niveauReservoir}</div>
+                <div><strong>🔧 Vidange:</strong> {getSelectedVehicle().vidangeInterval} km</div>
+                
+                {/* Equipment & Features */}
+                <div><strong>📻 Radio:</strong> {getSelectedVehicle().radio ? '✅ Oui' : '❌ Non'}</div>
+                <div><strong>🧭 GPS:</strong> {getSelectedVehicle().gps ? '✅ Oui' : '❌ Non'}</div>
+                <div><strong>🎵 MP3:</strong> {getSelectedVehicle().mp3 ? '✅ Oui' : '❌ Non'}</div>
+                <div><strong>💿 CD:</strong> {getSelectedVehicle().cd ? '✅ Oui' : '❌ Non'}</div>
+                
+                {/* Keys Information */}
+                <div><strong>🔑 Nombre de Clés:</strong> {getSelectedVehicle().nombreCles}</div>
+                
+                {/* Kilometer Information */}
+                <div><strong>🛣️ KM Départ:</strong> {getSelectedVehicle().kmDepart} km</div>
+                <div><strong>🛣️ KM Retour:</strong> {getSelectedVehicle().kmRetour} km</div>
+                
+                {/* Tax Information */}
+                <div><strong>📅 Impôt 2026:</strong> {getSelectedVehicle().impot2026 ? '✅ Payé' : '❌ Non payé'}</div>
+                <div><strong>📅 Impôt 2027:</strong> {getSelectedVehicle().impot2027 ? '✅ Payé' : '❌ Non payé'}</div>
+                <div><strong>📅 Impôt 2028:</strong> {getSelectedVehicle().impot2028 ? '✅ Payé' : '❌ Non payé'}</div>
+                <div><strong>📅 Impôt 2029:</strong> {getSelectedVehicle().impot2029 ? '✅ Payé' : '❌ Non payé'}</div>
+                
+                {/* Insurance Information */}
+                <div><strong>🛡️ Assurance Début:</strong> {getSelectedVehicle().assuranceStartDate ? new Date(getSelectedVehicle().assuranceStartDate).toLocaleDateString() : 'N/A'}</div>
+                <div><strong>🛡️ Assurance Fin:</strong> {getSelectedVehicle().assuranceEndDate ? new Date(getSelectedVehicle().assuranceEndDate).toLocaleDateString() : 'N/A'}</div>
+                
+                {/* Status */}
+                <div><strong>✅ Disponible:</strong> {getSelectedVehicle().available ? '✅ Oui' : '❌ Non'}</div>
+                
+                {/* Image */}
+                {getSelectedVehicle().image && (
+                  <div style={{ gridColumn: '1 / -1', textAlign: 'center' }}>
+                    <strong>🖼️ Image du Véhicule:</strong>
+                    <div style={{ marginTop: '8px' }}>
+                      <img 
+                        src={getSelectedVehicle().image} 
+                        alt={getSelectedVehicle().name}
+                        style={{ 
+                          maxWidth: '200px', 
+                          maxHeight: '150px', 
+                          borderRadius: '8px',
+                          border: '2px solid #36c275'
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {/* Description */}
+                {getSelectedVehicle().description && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <strong>📝 Description:</strong> {getSelectedVehicle().description}
+                  </div>
+                )}
+                
+                {/* Remarks */}
+                {getSelectedVehicle().remarques && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <strong>💬 Remarques:</strong> {getSelectedVehicle().remarques}
+                  </div>
+                )}
+                
+                {/* Damages */}
+                {getSelectedVehicle().dommages && Array.isArray(getSelectedVehicle().dommages) && getSelectedVehicle().dommages.length > 0 && (
+                  <div style={{ gridColumn: '1 / -1' }}>
+                    <strong>🚨 Dommages Existants:</strong>
+                    <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
+                      {getSelectedVehicle().dommages.map((dommage, index) => (
+                        <li key={index}>{dommage}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {/* Dates */}
+                <div style={{ gridColumn: '1 / -1', borderTop: '1px solid #ccc', paddingTop: '10px', fontSize: '12px', color: '#666' }}>
+                  <strong>📅 Créé le:</strong> {getSelectedVehicle().createdAt ? new Date(getSelectedVehicle().createdAt).toLocaleString() : 'N/A'} | 
+                  <strong> 🔄 Modifié le:</strong> {getSelectedVehicle().updatedAt ? new Date(getSelectedVehicle().updatedAt).toLocaleString() : 'N/A'}
+                </div>
               </div>
             )}
           </div>

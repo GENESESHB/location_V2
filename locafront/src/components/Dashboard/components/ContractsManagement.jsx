@@ -90,46 +90,108 @@ const ContractsManagement = ({ user, vehicles, contracts, setContracts, setMessa
       // Use custom price if provided, otherwise use vehicle's price
       const prixParJour = contractForm.prixParJour || selectedVehicle.pricePerDay;
 
-      // Create contract data with all new fields
+      // Calculate rental days for total price
+      const start = new Date(contractForm.startDateTime);
+      const end = new Date(contractForm.endDateTime);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const rentalDays = diffDays === 0 ? 1 : diffDays;
+      const prixTotal = rentalDays * prixParJour;
+
+      // Create contract data with ALL vehicle details and COMPLETE user information
       const contractData = {
-        // Client information
-        clientLastName: contractForm.clientLastName,
-        clientFirstName: contractForm.clientFirstName,
-        clientBirthDate: contractForm.clientBirthDate,
-        clientPhone: contractForm.clientPhone,
-        clientAddress: contractForm.clientAddress,
-        clientPassport: contractForm.clientPassport,
-        clientCIN: contractForm.clientCIN,
-        clientLicenseNumber: contractForm.clientLicenseNumber,
-        clientLicenseIssueDate: contractForm.clientLicenseIssueDate,
+        // 1. COMPLETE User/Partner information
+        partnerInfo: {
+          partnerId: user._id || user.id,
+          partnerName: user.entreprise || user.name,
+          partnerEmail: user.email,
+          partnerPhone: user.number || user.telephone,
+          partnerLogo: user.logoEntreprise,
+          partnerCountry: user.country,
+          partnerCity: user.city,
+          partnerStatus: user.status,
+          partnerRole: user.role,
+          partnerCreatedAt: user.createdAt,
+          partnerUpdatedAt: user.updatedAt
+        },
+
+        // 2. Client/Locataire information
+        clientInfo: {
+          lastName: contractForm.clientLastName,
+          firstName: contractForm.clientFirstName,
+          birthDate: contractForm.clientBirthDate,
+          phone: contractForm.clientPhone,
+          address: contractForm.clientAddress,
+          passport: contractForm.clientPassport,
+          cin: contractForm.clientCIN,
+          licenseNumber: contractForm.clientLicenseNumber,
+          licenseIssueDate: contractForm.clientLicenseIssueDate
+        },
 
         // Second driver information
-        secondDriverLastName: contractForm.secondDriverLastName,
-        secondDriverFirstName: contractForm.secondDriverFirstName,
-        secondDriverLicenseNumber: contractForm.secondDriverLicenseNumber,
-        secondDriverLicenseIssueDate: contractForm.secondDriverLicenseIssueDate,
+        secondDriverInfo: {
+          lastName: contractForm.secondDriverLastName,
+          firstName: contractForm.secondDriverFirstName,
+          licenseNumber: contractForm.secondDriverLicenseNumber,
+          licenseIssueDate: contractForm.secondDriverLicenseIssueDate
+        },
 
-        // Vehicle information - only send vehicleId, backend will inherit all vehicle info
-        vehicleId: contractForm.vehicleId,
+        // 3. Complete vehicle information
+        vehicleInfo: {
+          vehicleId: selectedVehicle._id,
+          name: selectedVehicle.name,
+          type: selectedVehicle.type,
+          boiteVitesse: selectedVehicle.boiteVitesse,
+          description: selectedVehicle.description,
+          image: selectedVehicle.image,
+          pricePerDay: selectedVehicle.pricePerDay,
+          carburant: selectedVehicle.carburant,
+          niveauReservoir: selectedVehicle.niveauReservoir,
+          radio: selectedVehicle.radio,
+          gps: selectedVehicle.gps,
+          mp3: selectedVehicle.mp3,
+          cd: selectedVehicle.cd,
+          nombreCles: selectedVehicle.nombreCles,
+          kmDepart: selectedVehicle.kmDepart,
+          kmRetour: selectedVehicle.kmRetour,
+          impot2026: selectedVehicle.impot2026,
+          impot2027: selectedVehicle.impot2027,
+          impot2028: selectedVehicle.impot2028,
+          impot2029: selectedVehicle.impot2029,
+          assuranceStartDate: selectedVehicle.assuranceStartDate,
+          assuranceEndDate: selectedVehicle.assuranceEndDate,
+          vidangeInterval: selectedVehicle.vidangeInterval,
+          remarques: selectedVehicle.remarques,
+          dommages: selectedVehicle.dommages,
+          available: selectedVehicle.available,
+          createdAt: selectedVehicle.createdAt,
+          updatedAt: selectedVehicle.updatedAt
+        },
 
         // Rental information
-        startDateTime: contractForm.startDateTime,
-        endDateTime: contractForm.endDateTime,
-        startLocation: contractForm.startLocation,
-        endLocation: contractForm.endLocation,
+        rentalInfo: {
+          startDateTime: contractForm.startDateTime,
+          endDateTime: contractForm.endDateTime,
+          startLocation: contractForm.startLocation,
+          endLocation: contractForm.endLocation,
+          prixParJour: prixParJour,
+          prixTotal: prixTotal,
+          rentalDays: rentalDays
+        },
 
-        // Price information - backend will calculate total automatically
-        prixParJour: prixParJour
-
-        // Note: prixTotal is no longer sent - backend calculates it automatically
-        // partnerId and partnerName are set by backend from user data
-        // status is set by backend to 'pending' by default
+        // Contract metadata
+        contractMetadata: {
+          createdBy: user._id || user.id,
+          createdAt: new Date().toISOString(),
+          status: 'pending'
+        }
       };
 
-      console.log('📤 Données du contrat envoyées:', contractData);
+      console.log('📤 Données complètes du contrat envoyées:', contractData);
+      console.log('👤 COMPLETE Informations utilisateur:', user);
       console.log('🚗 Véhicule sélectionné:', selectedVehicle);
 
-      // Send contract data
+      // Send complete contract data to server
       const res = await api.post('/contracts', contractData);
 
       console.log('✅ Réponse du serveur:', res.data);
@@ -163,8 +225,8 @@ const ContractsManagement = ({ user, vehicles, contracts, setContracts, setMessa
       // Reload contracts
       await loadContracts();
 
-      setMessage('✅ Contrat créé avec succès!');
-      setTimeout(() => setMessage(''), 3000);
+      setMessage('✅ Contrat créé avec succès! Toutes les informations ont été sauvegardées.');
+      setTimeout(() => setMessage(''), 4000);
     } catch (err) {
       console.error('❌ Erreur création contrat:', err);
       console.error('Détails erreur:', err.response?.data);
@@ -202,42 +264,98 @@ const ContractsManagement = ({ user, vehicles, contracts, setContracts, setMessa
       // Use custom price if provided, otherwise use vehicle's price
       const prixParJour = contractForm.prixParJour || selectedVehicle.pricePerDay;
 
-      // Create contract data with all new fields
+      // Calculate rental days for total price
+      const start = new Date(contractForm.startDateTime);
+      const end = new Date(contractForm.endDateTime);
+      const diffTime = Math.abs(end - start);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      const rentalDays = diffDays === 0 ? 1 : diffDays;
+      const prixTotal = rentalDays * prixParJour;
+
+      // Create complete contract data for update with ALL user information
       const contractData = {
-        // Client information
-        clientLastName: contractForm.clientLastName,
-        clientFirstName: contractForm.clientFirstName,
-        clientBirthDate: contractForm.clientBirthDate,
-        clientPhone: contractForm.clientPhone,
-        clientAddress: contractForm.clientAddress,
-        clientPassport: contractForm.clientPassport,
-        clientCIN: contractForm.clientCIN,
-        clientLicenseNumber: contractForm.clientLicenseNumber,
-        clientLicenseIssueDate: contractForm.clientLicenseIssueDate,
+        // 1. COMPLETE User/Partner information
+        partnerInfo: {
+          partnerId: user._id || user.id,
+          partnerName: user.entreprise || user.name,
+          partnerEmail: user.email,
+          partnerPhone: user.number || user.telephone,
+          partnerLogo: user.logoEntreprise,
+          partnerCountry: user.country,
+          partnerCity: user.city,
+          partnerStatus: user.status,
+          partnerRole: user.role,
+          partnerCreatedAt: user.createdAt,
+          partnerUpdatedAt: user.updatedAt
+        },
+
+        // 2. Client information
+        clientInfo: {
+          lastName: contractForm.clientLastName,
+          firstName: contractForm.clientFirstName,
+          birthDate: contractForm.clientBirthDate,
+          phone: contractForm.clientPhone,
+          address: contractForm.clientAddress,
+          passport: contractForm.clientPassport,
+          cin: contractForm.clientCIN,
+          licenseNumber: contractForm.clientLicenseNumber,
+          licenseIssueDate: contractForm.clientLicenseIssueDate
+        },
 
         // Second driver information
-        secondDriverLastName: contractForm.secondDriverLastName,
-        secondDriverFirstName: contractForm.secondDriverFirstName,
-        secondDriverLicenseNumber: contractForm.secondDriverLicenseNumber,
-        secondDriverLicenseIssueDate: contractForm.secondDriverLicenseIssueDate,
+        secondDriverInfo: {
+          lastName: contractForm.secondDriverLastName,
+          firstName: contractForm.secondDriverFirstName,
+          licenseNumber: contractForm.secondDriverLicenseNumber,
+          licenseIssueDate: contractForm.secondDriverLicenseIssueDate
+        },
 
-        // Vehicle information
-        vehicleId: contractForm.vehicleId,
+        // 3. Complete vehicle information
+        vehicleInfo: {
+          vehicleId: selectedVehicle._id,
+          name: selectedVehicle.name,
+          type: selectedVehicle.type,
+          boiteVitesse: selectedVehicle.boiteVitesse,
+          description: selectedVehicle.description,
+          image: selectedVehicle.image,
+          pricePerDay: selectedVehicle.pricePerDay,
+          carburant: selectedVehicle.carburant,
+          niveauReservoir: selectedVehicle.niveauReservoir,
+          radio: selectedVehicle.radio,
+          gps: selectedVehicle.gps,
+          mp3: selectedVehicle.mp3,
+          cd: selectedVehicle.cd,
+          nombreCles: selectedVehicle.nombreCles,
+          kmDepart: selectedVehicle.kmDepart,
+          kmRetour: selectedVehicle.kmRetour,
+          impot2026: selectedVehicle.impot2026,
+          impot2027: selectedVehicle.impot2027,
+          impot2028: selectedVehicle.impot2028,
+          impot2029: selectedVehicle.impot2029,
+          assuranceStartDate: selectedVehicle.assuranceStartDate,
+          assuranceEndDate: selectedVehicle.assuranceEndDate,
+          vidangeInterval: selectedVehicle.vidangeInterval,
+          remarques: selectedVehicle.remarques,
+          dommages: selectedVehicle.dommages,
+          available: selectedVehicle.available
+        },
 
         // Rental information
-        startDateTime: contractForm.startDateTime,
-        endDateTime: contractForm.endDateTime,
-        startLocation: contractForm.startLocation,
-        endLocation: contractForm.endLocation,
-
-        // Price information - backend will calculate total automatically
-        prixParJour: prixParJour,
+        rentalInfo: {
+          startDateTime: contractForm.startDateTime,
+          endDateTime: contractForm.endDateTime,
+          startLocation: contractForm.startLocation,
+          endLocation: contractForm.endLocation,
+          prixParJour: prixParJour,
+          prixTotal: prixTotal,
+          rentalDays: rentalDays
+        },
 
         // Status
         status: contractForm.status || 'pending'
       };
 
-      console.log('📤 Mise à jour du contrat:', contractData);
+      console.log('📤 Mise à jour complète du contrat:', contractData);
 
       const res = await api.put(`/contracts/${editingContract._id}`, contractData);
 
@@ -271,8 +389,8 @@ const ContractsManagement = ({ user, vehicles, contracts, setContracts, setMessa
       // Reload contracts
       await loadContracts();
 
-      setMessage('✅ Contrat modifié avec succès!');
-      setTimeout(() => setMessage(''), 3000);
+      setMessage('✅ Contrat modifié avec succès! Toutes les informations ont été mises à jour.');
+      setTimeout(() => setMessage(''), 4000);
     } catch (err) {
       console.error('❌ Erreur modification contrat:', err);
       console.error('Détails erreur:', err.response?.data);
@@ -316,7 +434,7 @@ const ContractsManagement = ({ user, vehicles, contracts, setContracts, setMessa
 
   const downloadContract = (contract) => {
     const contractWindow = window.open('', '_blank');
-    const partnerName = user.entreprise;
+    const partnerName = user.entreprise || user.name;
 
     // Format dates for display
     const formatDate = (dateString) => {
@@ -329,25 +447,15 @@ const ContractsManagement = ({ user, vehicles, contracts, setContracts, setMessa
       });
     };
 
-    // Use inherited vehicle information from contract
-    const vehicleInfo = contract.vehicleName ? {
-      name: contract.vehicleName,
-      type: contract.vehicleType,
-      boiteVitesse: contract.vehicleBoiteVitesse,
-      description: contract.vehicleDescription || '',
-      pricePerDay: contract.vehiclePricePerDay,
-      marque: contract.vehicleMarque || '',
-      modele: contract.vehicleModele || '',
-      annee: contract.vehicleAnnee || '',
-      couleur: contract.vehicleCouleur || '',
-      carburant: contract.vehicleCarburant || '',
-      plaqueImmatriculation: contract.vehiclePlaqueImmatriculation || ''
-    } : null;
+    // Use the complete vehicle information stored in the contract
+    const vehicleInfo = contract.vehicleInfo ? contract.vehicleInfo : null;
+    // Use the complete partner information stored in the contract
+    const partnerInfo = contract.partnerInfo ? contract.partnerInfo : user;
 
     contractWindow.document.write(`
       <html>
         <head>
-          <title>Contrat de Location - ${contract.clientFirstName} ${contract.clientLastName}</title>
+          <title>Contrat de Location - ${contract.clientInfo.firstName} ${contract.clientInfo.lastName}</title>
           <style>
             body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
             .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
@@ -361,6 +469,7 @@ const ContractsManagement = ({ user, vehicles, contracts, setContracts, setMessa
             th { background-color: #f8f9fa; }
             .subsection { margin-left: 20px; margin-top: 15px; }
             .vehicle-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 15px 0; }
           </style>
         </head>
         <body>
@@ -380,74 +489,87 @@ const ContractsManagement = ({ user, vehicles, contracts, setContracts, setMessa
               </tr>
               <tr>
                 <td>
-                  <strong>Nom:</strong> ${partnerName}<br>
-                  <strong>ID Partenaire:</strong> ${user.id}<br>
-                  <strong>Email:</strong> ${user.email}
+                  <strong>Nom Entreprise:</strong> ${partnerInfo.partnerName || partnerName}<br>
+                  <strong>ID Partenaire:</strong> ${partnerInfo.partnerId || user._id || user.id}<br>
+                  <strong>Email:</strong> ${partnerInfo.partnerEmail || user.email}<br>
+                  <strong>Téléphone:</strong> ${partnerInfo.partnerPhone || user.number || user.telephone || 'Non spécifié'}<br>
+                  <strong>Pays:</strong> ${partnerInfo.partnerCountry || user.country || 'Non spécifié'}<br>
+                  <strong>Ville:</strong> ${partnerInfo.partnerCity || user.city || 'Non spécifié'}<br>
+                  <strong>Statut:</strong> ${partnerInfo.partnerStatus || user.status || 'Non spécifié'}<br>
+                  <strong>Rôle:</strong> ${partnerInfo.partnerRole || user.role || 'Non spécifié'}
                 </td>
                 <td>
-                  <strong>Nom:</strong> ${contract.clientLastName}<br>
-                  <strong>Prénom:</strong> ${contract.clientFirstName}<br>
-                  <strong>Date de naissance:</strong> ${contract.clientBirthDate ? new Date(contract.clientBirthDate).toLocaleDateString('fr-FR') : 'Non spécifiée'}<br>
-                  <strong>Téléphone:</strong> ${contract.clientPhone}<br>
-                  <strong>Adresse:</strong> ${contract.clientAddress}<br>
-                  <strong>Passeport:</strong> ${contract.clientPassport || 'Non spécifié'}<br>
-                  <strong>CIN:</strong> ${contract.clientCIN || 'Non spécifié'}<br>
-                  <strong>Permis de conduire:</strong> ${contract.clientLicenseNumber}<br>
-                  <strong>Délivré le:</strong> ${contract.clientLicenseIssueDate ? new Date(contract.clientLicenseIssueDate).toLocaleDateString('fr-FR') : 'Non spécifié'}
+                  <strong>Nom:</strong> ${contract.clientInfo.lastName}<br>
+                  <strong>Prénom:</strong> ${contract.clientInfo.firstName}<br>
+                  <strong>Date de naissance:</strong> ${contract.clientInfo.birthDate ? new Date(contract.clientInfo.birthDate).toLocaleDateString('fr-FR') : 'Non spécifiée'}<br>
+                  <strong>Téléphone:</strong> ${contract.clientInfo.phone}<br>
+                  <strong>Adresse:</strong> ${contract.clientInfo.address}<br>
+                  <strong>Passeport:</strong> ${contract.clientInfo.passport || 'Non spécifié'}<br>
+                  <strong>CIN:</strong> ${contract.clientInfo.cin || 'Non spécifié'}<br>
+                  <strong>Permis de conduire:</strong> ${contract.clientInfo.licenseNumber}<br>
+                  <strong>Délivré le:</strong> ${contract.clientInfo.licenseIssueDate ? new Date(contract.clientInfo.licenseIssueDate).toLocaleDateString('fr-FR') : 'Non spécifié'}
                 </td>
               </tr>
             </table>
           </div>
 
-          ${contract.secondDriverLastName || contract.secondDriverFirstName ? `
+          ${contract.secondDriverInfo && (contract.secondDriverInfo.lastName || contract.secondDriverInfo.firstName) ? `
           <div class="section">
             <h3>2. DEUXIÈME CONDUCTEUR</h3>
             <div class="highlight">
-              <p><strong>Nom:</strong> ${contract.secondDriverLastName}</p>
-              <p><strong>Prénom:</strong> ${contract.secondDriverFirstName}</p>
-              <p><strong>Permis de conduire:</strong> ${contract.secondDriverLicenseNumber || 'Non spécifié'}</p>
-              <p><strong>Délivré le:</strong> ${contract.secondDriverLicenseIssueDate ? new Date(contract.secondDriverLicenseIssueDate).toLocaleDateString('fr-FR') : 'Non spécifié'}</p>
+              <p><strong>Nom:</strong> ${contract.secondDriverInfo.lastName}</p>
+              <p><strong>Prénom:</strong> ${contract.secondDriverInfo.firstName}</p>
+              <p><strong>Permis de conduire:</strong> ${contract.secondDriverInfo.licenseNumber || 'Non spécifié'}</p>
+              <p><strong>Délivré le:</strong> ${contract.secondDriverInfo.licenseIssueDate ? new Date(contract.secondDriverInfo.licenseIssueDate).toLocaleDateString('fr-FR') : 'Non spécifié'}</p>
             </div>
           </div>
           ` : ''}
 
           <div class="section">
-            <h3>${contract.secondDriverLastName ? '3' : '2'}. VÉHICULE LOUÉ</h3>
+            <h3>${contract.secondDriverInfo && (contract.secondDriverInfo.lastName || contract.secondDriverInfo.firstName) ? '3' : '2'}. VÉHICULE LOUÉ</h3>
             <div class="highlight">
               ${vehicleInfo ? `
-                <div class="vehicle-details">
+                <div class="info-grid">
                   <div><strong>Véhicule:</strong> ${vehicleInfo.name}</div>
                   <div><strong>Type:</strong> ${vehicleInfo.type}</div>
                   <div><strong>Boîte de vitesse:</strong> ${vehicleInfo.boiteVitesse}</div>
-                  <div><strong>Marque:</strong> ${vehicleInfo.marque || 'Non spécifiée'}</div>
-                  <div><strong>Modèle:</strong> ${vehicleInfo.modele || 'Non spécifié'}</div>
-                  <div><strong>Année:</strong> ${vehicleInfo.annee || 'Non spécifiée'}</div>
-                  <div><strong>Couleur:</strong> ${vehicleInfo.couleur || 'Non spécifiée'}</div>
                   <div><strong>Carburant:</strong> ${vehicleInfo.carburant || 'Non spécifié'}</div>
-                  <div><strong>Plaque d'immatriculation:</strong> ${vehicleInfo.plaqueImmatriculation || 'Non spécifiée'}</div>
+                  <div><strong>Niveau réservoir:</strong> ${vehicleInfo.niveauReservoir || 'Non spécifié'}</div>
+                  <div><strong>Kilométrage départ:</strong> ${vehicleInfo.kmDepart || 'Non spécifié'} km</div>
+                  <div><strong>Kilométrage retour:</strong> ${vehicleInfo.kmRetour || 'Non spécifié'} km</div>
+                  <div><strong>Nombre de clés:</strong> ${vehicleInfo.nombreCles || 'Non spécifié'}</div>
                 </div>
                 <div style="margin-top: 15px;">
-                  <p><strong>Prix par jour:</strong> ${contract.prixParJour || vehicleInfo.pricePerDay}€</p>
-                  <p><strong>Description:</strong> ${vehicleInfo.description}</p>
+                  <p><strong>Équipements:</strong>
+                    ${vehicleInfo.radio ? 'Radio, ' : ''}
+                    ${vehicleInfo.gps ? 'GPS, ' : ''}
+                    ${vehicleInfo.mp3 ? 'MP3, ' : ''}
+                    ${vehicleInfo.cd ? 'CD, ' : ''}
+                    ${!vehicleInfo.radio && !vehicleInfo.gps && !vehicleInfo.mp3 && !vehicleInfo.cd ? 'Aucun équipement spécifié' : ''}
+                  </p>
+                  <p><strong>Prix par jour:</strong> ${contract.rentalInfo.prixParJour || vehicleInfo.pricePerDay}€</p>
+                  ${vehicleInfo.description ? `<p><strong>Description:</strong> ${vehicleInfo.description}</p>` : ''}
+                  ${vehicleInfo.remarques ? `<p><strong>Remarques:</strong> ${vehicleInfo.remarques}</p>` : ''}
                 </div>
-              ` : '<p>Véhicule non spécifié</p>'}
+              ` : '<p>Informations véhicule non disponibles</p>'}
             </div>
           </div>
 
           <div class="section">
-            <h3>${contract.secondDriverLastName ? '4' : '3'}. DÉTAILS DE LA LOCATION</h3>
+            <h3>${contract.secondDriverInfo && (contract.secondDriverInfo.lastName || contract.secondDriverInfo.firstName) ? '4' : '3'}. DÉTAILS DE LA LOCATION</h3>
             <div class="highlight">
-              <p><strong>Date et heure de départ:</strong> ${formatDate(contract.startDateTime)}</p>
-              <p><strong>Date et heure de retour:</strong> ${formatDate(contract.endDateTime)}</p>
-              <p><strong>Lieu de départ:</strong> ${contract.startLocation}</p>
-              <p><strong>Lieu de retour:</strong> ${contract.endLocation}</p>
-              <p><strong>Durée totale:</strong> ${Math.ceil((new Date(contract.endDateTime) - new Date(contract.startDateTime)) / (1000 * 60 * 60 * 24))} jours</p>
-              <p><strong>Prix total:</strong> ${contract.prixTotal}€</p>
+              <p><strong>Date et heure de départ:</strong> ${formatDate(contract.rentalInfo.startDateTime)}</p>
+              <p><strong>Date et heure de retour:</strong> ${formatDate(contract.rentalInfo.endDateTime)}</p>
+              <p><strong>Lieu de départ:</strong> ${contract.rentalInfo.startLocation}</p>
+              <p><strong>Lieu de retour:</strong> ${contract.rentalInfo.endLocation}</p>
+              <p><strong>Durée totale:</strong> ${contract.rentalInfo.rentalDays} jours</p>
+              <p><strong>Prix par jour:</strong> ${contract.rentalInfo.prixParJour}€</p>
+              <p><strong>Prix total:</strong> ${contract.rentalInfo.prixTotal}€</p>
             </div>
           </div>
 
           <div class="section">
-            <h3>${contract.secondDriverLastName ? '5' : '4'}. CONDITIONS GÉNÉRALES</h3>
+            <h3>${contract.secondDriverInfo && (contract.secondDriverInfo.lastName || contract.secondDriverInfo.firstName) ? '5' : '4'}. CONDITIONS GÉNÉRALES</h3>
             <ul>
               <li>Le client s'engage à restituer le véhicule dans l'état où il l'a reçu</li>
               <li>Tout dommage sera à la charge du client</li>
@@ -463,14 +585,14 @@ const ContractsManagement = ({ user, vehicles, contracts, setContracts, setMessa
           </div>
 
           <div class="signature">
-            <p>Fait à ${contract.startLocation}, le ${new Date().toLocaleDateString('fr-FR')}</p>
+            <p>Fait à ${contract.rentalInfo.startLocation}, le ${new Date().toLocaleDateString('fr-FR')}</p>
             <br><br><br>
             <table width="100%">
               <tr>
                 <td width="50%" align="center">
                   <p>Signature du Client</p>
-                  <p>${contract.clientFirstName} ${contract.clientLastName}</p>
-                  <p>CIN: ${contract.clientCIN || 'Non spécifié'}</p>
+                  <p>${contract.clientInfo.firstName} ${contract.clientInfo.lastName}</p>
+                  <p>CIN: ${contract.clientInfo.cin || 'Non spécifié'}</p>
                 </td>
                 <td width="50%" align="center">
                   <p>Signature du Partenaire</p>
@@ -495,30 +617,30 @@ const ContractsManagement = ({ user, vehicles, contracts, setContracts, setMessa
     setEditingContract(contract);
     setContractForm({
       // Client information
-      clientLastName: contract.clientLastName || '',
-      clientFirstName: contract.clientFirstName || '',
-      clientBirthDate: contract.clientBirthDate ? contract.clientBirthDate.split('T')[0] : '',
-      clientPhone: contract.clientPhone || '',
-      clientAddress: contract.clientAddress || '',
-      clientPassport: contract.clientPassport || '',
-      clientCIN: contract.clientCIN || '',
-      clientLicenseNumber: contract.clientLicenseNumber || '',
-      clientLicenseIssueDate: contract.clientLicenseIssueDate ? contract.clientLicenseIssueDate.split('T')[0] : '',
+      clientLastName: contract.clientInfo?.lastName || '',
+      clientFirstName: contract.clientInfo?.firstName || '',
+      clientBirthDate: contract.clientInfo?.birthDate ? contract.clientInfo.birthDate.split('T')[0] : '',
+      clientPhone: contract.clientInfo?.phone || '',
+      clientAddress: contract.clientInfo?.address || '',
+      clientPassport: contract.clientInfo?.passport || '',
+      clientCIN: contract.clientInfo?.cin || '',
+      clientLicenseNumber: contract.clientInfo?.licenseNumber || '',
+      clientLicenseIssueDate: contract.clientInfo?.licenseIssueDate ? contract.clientInfo.licenseIssueDate.split('T')[0] : '',
 
       // Second driver information
-      secondDriverLastName: contract.secondDriverLastName || '',
-      secondDriverFirstName: contract.secondDriverFirstName || '',
-      secondDriverLicenseNumber: contract.secondDriverLicenseNumber || '',
-      secondDriverLicenseIssueDate: contract.secondDriverLicenseIssueDate ? contract.secondDriverLicenseIssueDate.split('T')[0] : '',
+      secondDriverLastName: contract.secondDriverInfo?.lastName || '',
+      secondDriverFirstName: contract.secondDriverInfo?.firstName || '',
+      secondDriverLicenseNumber: contract.secondDriverInfo?.licenseNumber || '',
+      secondDriverLicenseIssueDate: contract.secondDriverInfo?.licenseIssueDate ? contract.secondDriverInfo.licenseIssueDate.split('T')[0] : '',
 
       // Rental information
-      vehicleId: contract.vehicleId || '',
-      startDateTime: contract.startDateTime ? contract.startDateTime.slice(0, 16) : '',
-      endDateTime: contract.endDateTime ? contract.endDateTime.slice(0, 16) : '',
-      startLocation: contract.startLocation || '',
-      endLocation: contract.endLocation || '',
-      prixParJour: contract.prixParJour || '',
-      prixTotal: contract.prixTotal || 0
+      vehicleId: contract.vehicleInfo?.vehicleId || '',
+      startDateTime: contract.rentalInfo?.startDateTime ? contract.rentalInfo.startDateTime.slice(0, 16) : '',
+      endDateTime: contract.rentalInfo?.endDateTime ? contract.rentalInfo.endDateTime.slice(0, 16) : '',
+      startLocation: contract.rentalInfo?.startLocation || '',
+      endLocation: contract.rentalInfo?.endLocation || '',
+      prixParJour: contract.rentalInfo?.prixParJour || '',
+      prixTotal: contract.rentalInfo?.prixTotal || 0
     });
     setShowForm(true);
     setErrors({});

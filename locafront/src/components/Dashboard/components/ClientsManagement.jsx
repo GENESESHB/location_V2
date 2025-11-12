@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import api from '../../../utils/api';
 
-const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients }) => {
+const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients, blacklist }) => {
   const [showForm, setShowForm] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [formData, setFormData] = useState({
@@ -31,11 +31,42 @@ const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients 
     }));
   };
 
+  // Check if client is in blacklist using the existing blacklist array
+  const checkBlacklist = (clientData) => {
+    if (!blacklist || blacklist.length === 0) {
+      return false;
+    }
+
+    const { cin, passport, licenseNumber } = clientData;
+    
+    // Check if any identifier matches the blacklist
+    const isBlacklisted = blacklist.some(blacklisted => {
+      return (
+        (cin && blacklisted.cin === cin) ||
+        (passport && blacklisted.passport === passport) ||
+        (licenseNumber && blacklisted.licenseNumber === licenseNumber)
+      );
+    });
+
+    return isBlacklisted;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
+      // CHECK BLACKLIST BEFORE ADDING NEW CLIENT
+      if (!editingClient) {
+        const isBlacklisted = checkBlacklist(formData);
+        
+        if (isBlacklisted) {
+          setMessage('❌ Ce client est dans la liste noire et ne peut pas être ajouté');
+          setLoading(false);
+          return;
+        }
+      }
+
       if (editingClient) {
         // Update client
         const res = await api.put(`/clients/${editingClient._id}`, formData);
@@ -62,7 +93,15 @@ const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients 
       loadClients();
     } catch (err) {
       console.error('❌ Erreur:', err);
-      setMessage('❌ Erreur lors de la sauvegarde du client');
+      
+      // Handle specific error cases
+      if (err.response?.status === 409) {
+        setMessage('❌ Ce client existe déjà dans le système');
+      } else if (err.response?.data?.message) {
+        setMessage(`❌ ${err.response.data.message}`);
+      } else {
+        setMessage('❌ Erreur lors de la sauvegarde du client');
+      }
     } finally {
       setLoading(false);
     }
@@ -104,7 +143,7 @@ const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients 
     setShowBlacklistForm(true);
   };
 
-  // Submit blacklist with custom reason - UPDATED FOR YOUR DATABASE MODEL
+  // Submit blacklist with custom reason - UPDATED TO REMOVE CLIENT AUTOMATICALLY
   const handleBlacklistSubmit = async (e) => {
     e.preventDefault();
 
@@ -120,16 +159,24 @@ const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients 
     }
 
     try {
+      // Add to blacklist
       await api.post('/blacklist', {
         cin: selectedClient.cin || undefined,
         passport: selectedClient.passport || undefined,
         licenseNumber: selectedClient.licenseNumber || undefined,
         reason: blacklistReason
       });
-      setMessage('✅ Client ajouté à la liste noire avec succès');
+
+      // AUTOMATICALLY REMOVE CLIENT FROM CLIENTS LIST
+      await api.delete(`/clients/${selectedClient._id}`);
+      
+      setMessage('✅ Client ajouté à la liste noire et supprimé de la liste des clients avec succès');
       setShowBlacklistForm(false);
       setSelectedClient(null);
       setBlacklistReason('');
+      
+      // Refresh the clients list to reflect the removal
+      loadClients();
     } catch (err) {
       console.error('❌ Erreur:', err);
       if (err.response?.data?.message) {
@@ -137,7 +184,7 @@ const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients 
       } else if (err.response?.data?.error) {
         setMessage(`❌ ${err.response.data.error}`);
       } else {
-        setMessage('❌ Erreur lors de l\'ajout à la liste noire');
+        setMessage('❌ Erreur lors de l\'ajout à la liste noire ou de la suppression du client');
       }
     }
   };
@@ -261,6 +308,16 @@ const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients 
             </div>
 
             <form onSubmit={handleSubmit} className="client-form">
+              <div className="security-notice">
+                <p>🔒 <strong>Sécurité:</strong> Le système vérifiera automatiquement si ce client se trouve dans la liste noire avant l'ajout.</p>
+                <p className="security-stats">
+                  {blacklist && blacklist.length > 0 
+                    ? `📊 ${blacklist.length} client(s) dans la liste noire - Vérification active`
+                    : '✅ Aucun client dans la liste noire'
+                  }
+                </p>
+              </div>
+
               <div className="form-grid">
                 <div className="form-group">
                   <label>Nom *</label>
@@ -374,7 +431,7 @@ const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients 
                   disabled={loading}
                   className="btn-primary"
                 >
-                  {loading ? 'Enregistrement...' : (editingClient ? 'Modifier' : 'Ajouter')}
+                  {loading ? 'Vérification...' : (editingClient ? 'Modifier' : 'Ajouter')}
                 </button>
               </div>
             </form>
@@ -423,6 +480,10 @@ const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients 
                 />
               </div>
 
+              <div className="warning-message">
+                <p>⚠️ <strong>Attention:</strong> Ce client sera automatiquement supprimé de la liste des clients après avoir été ajouté à la liste noire.</p>
+              </div>
+
               <div className="form-actions">
                 <button
                   type="button"
@@ -439,7 +500,7 @@ const ClientsManagement = ({ user, clients, setClients, setMessage, loadClients 
                   type="submit"
                   className="btn-warning"
                 >
-                  Confirmer l'ajout à la liste noire
+                  ⚠️ Confirmer l'ajout à la liste noire
                 </button>
               </div>
             </form>

@@ -1,11 +1,12 @@
 // Dashboard.jsx
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import api from '../../utils/api'; // Importez l'API configurée
+import api from '../../utils/api';
 import Overview from './components/Overview';
 import VehiclesManagement from './components/VehiclesManagement';
 import ContractsManagement from './components/ContractsManagement';
 import BlacklistManagement from './components/BlacklistManagement';
+import ClientsManagement from './components/ClientsManagement'; // New import
 import './Dashboard.css';
 
 const Dashboard = () => {
@@ -14,19 +15,19 @@ const Dashboard = () => {
   const [vehicles, setVehicles] = useState([]);
   const [contracts, setContracts] = useState([]);
   const [blacklist, setBlacklist] = useState([]);
+  const [clients, setClients] = useState([]); // New state
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Load data on component mount
   useEffect(() => {
     if (user) {
-      // Debug: vérifiez ce qui est stocké
       console.log('🔑 Token:', localStorage.getItem('token'));
       console.log('👤 User:', user);
       
       loadVehicles();
       loadContracts();
       loadBlacklist();
+      loadClients(); // Load clients
     }
   }, [user]);
 
@@ -34,11 +35,9 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const res = await api.get('/vehicles/my-vehicles');
-      console.log('✅ Véhicules chargés:', res.data);
       setVehicles(res.data.vehicles);
     } catch (err) {
       console.error('❌ Erreur loading vehicles:', err);
-      console.error('Détails erreur:', err.response?.data);
       setMessage('Erreur lors du chargement des véhicules');
     } finally {
       setLoading(false);
@@ -48,24 +47,35 @@ const Dashboard = () => {
   const loadContracts = async () => {
     try {
       const res = await api.get('/contracts/my-contracts');
-      console.log('✅ Contrats chargés:', res.data);
       setContracts(res.data.contracts);
     } catch (err) {
       console.error('❌ Erreur loading contracts:', err);
-      console.error('Détails erreur:', err.response?.data);
       setMessage('Erreur lors du chargement des contrats');
     }
   };
 
   const loadBlacklist = async () => {
     try {
-      const res = await api.get('/blacklist/my-blacklist');
-      console.log('✅ Blacklist chargée:', res.data);
+      const res = await api.get('/blacklist');
       setBlacklist(res.data.blacklist);
     } catch (err) {
       console.error('❌ Erreur loading blacklist:', err);
-      console.error('Détails erreur:', err.response?.data);
       setMessage('Erreur lors du chargement de la liste noire');
+    }
+  };
+
+  // New function to load clients
+  const loadClients = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/clients/my-clients');
+      console.log('✅ Clients chargés:', res.data);
+      setClients(res.data.clients);
+    } catch (err) {
+      console.error('❌ Erreur loading clients:', err);
+      setMessage('Erreur lors du chargement des clients');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,13 +85,16 @@ const Dashboard = () => {
       vehicles,
       contracts,
       blacklist,
+      clients, // Add clients to props
       setVehicles,
       setContracts,
       setBlacklist,
+      setClients, // Add setClients to props
       setMessage,
       loadVehicles,
       loadContracts,
-      loadBlacklist
+      loadBlacklist,
+      loadClients // Add loadClients to props
     };
 
     switch (activeSection) {
@@ -93,12 +106,14 @@ const Dashboard = () => {
         return <ContractsManagement {...commonProps} />;
       case 'blacklist':
         return <BlacklistManagement {...commonProps} />;
+      case 'clients': // New case
+        return <ClientsManagement {...commonProps} />;
       default:
         return <Overview {...commonProps} />;
     }
   };
 
-  // SVG Icons (gardez vos icônes existantes)
+  // SVG Icons - Add ClientsIcon
   const OverviewIcon = () => (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <rect x="3" y="3" width="7" height="7"></rect>
@@ -135,6 +150,16 @@ const Dashboard = () => {
     </svg>
   );
 
+  // New Clients Icon
+  const ClientsIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+      <circle cx="9" cy="7" r="4"></circle>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+    </svg>
+  );
+
   const LogoutIcon = () => (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
@@ -147,6 +172,7 @@ const Dashboard = () => {
     { id: 'overview', label: 'Vue d\'ensemble', icon: <OverviewIcon /> },
     { id: 'vehicles', label: 'Véhicules', icon: <VehiclesIcon /> },
     { id: 'contracts', label: 'Contrats', icon: <ContractsIcon /> },
+    { id: 'clients', label: 'Clients', icon: <ClientsIcon /> }, // New menu item
     { id: 'blacklist', label: 'Liste Noire', icon: <BlacklistIcon /> }
   ];
 
